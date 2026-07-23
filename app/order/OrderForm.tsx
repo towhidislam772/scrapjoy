@@ -2,8 +2,9 @@
 
 import { useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { products, brand, formatPrice } from "@/lib/brand";
+import { products, brand, formatPrice, advanceAmount, prepaidPercent } from "@/lib/brand";
 import { getBrowserSupabase, supabaseConfigured, PHOTO_BUCKET } from "@/lib/supabase";
+import { useAuth } from "@/lib/useAuth";
 
 // Checkout flow:
 //  • If Supabase is configured, we save the order to the database AND upload the
@@ -23,15 +24,45 @@ export function OrderForm() {
   const [city, setCity] = useState("");
   const [address, setAddress] = useState("");
   const [occasion, setOccasion] = useState("");
-  const [payment, setPayment] = useState("Cash on Delivery");
+  const [payment, setPayment] = useState(`bKash advance (${prepaidPercent}%)`);
   const [photos, setPhotos] = useState<File[]>([]);
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
   const [orderId, setOrderId] = useState("");
+  const [coupon, setCoupon] = useState("");
+  const [applied, setApplied] = useState<{ code: string; discount: number } | null>(null);
+  const [couponMsg, setCouponMsg] = useState("");
   const fileInput = useRef<HTMLInputElement>(null);
+  const { user } = useAuth();
 
   const product = products.find((p) => p.slug === productSlug) ?? products[1];
+  const discount = applied?.discount ?? 0;
+  const total = Math.max(0, product.price - discount);
+  const isFullPayment = payment.includes("full");
+  const payNow = isFullPayment ? total : advanceAmount(total);
   const ready = Boolean(name && phone && city && address);
+
+  async function applyCoupon() {
+    setCouponMsg("");
+    if (!coupon.trim()) return;
+    try {
+      const res = await fetch("/api/coupon", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: coupon, subtotal: product.price }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        setApplied({ code: data.code, discount: data.discount });
+        setCouponMsg(data.message);
+      } else {
+        setApplied(null);
+        setCouponMsg(data.message || "Invalid code.");
+      }
+    } catch {
+      setCouponMsg("Couldn't check that code.");
+    }
+  }
 
   const waNumber = brand.whatsapp.replace(/[^\d]/g, "");
   const waMessage = [
@@ -39,8 +70,11 @@ export function OrderForm() {
     ``,
     `Book: ${product.name} (${product.size}, ${product.pages} pages)`,
     `Price: ${formatPrice(product.price)}`,
-    `Occasion: ${occasion || "—"}`,
+    ...(discount > 0 ? [`Coupon: ${applied?.code} (−${formatPrice(discount)})`] : []),
+    `Total: ${formatPrice(total)}`,
     `Payment: ${payment}`,
+    `Pay now via bKash: ${formatPrice(payNow)} (to ${brand.bkashNumber})`,
+    `Occasion: ${occasion || "—"}`,
     ``,
     `Name: ${name}`,
     `Phone: ${phone}`,
@@ -79,6 +113,10 @@ export function OrderForm() {
           occasion,
           payment,
           photo_count: photos.length,
+          user_id: user?.id ?? null,
+          email: user?.email ?? null,
+          coupon_code: applied?.code ?? null,
+          discount,
         }),
       });
       if (!res.ok) throw new Error(`Order failed (${res.status})`);
@@ -143,13 +181,23 @@ export function OrderForm() {
               <span>{product.name} · {product.size}</span>
               <span>{formatPrice(product.price)}</span>
             </div>
+            {discount > 0 && (
+              <div className="mt-1 flex justify-between text-sm">
+                <span>Discount ({applied?.code})</span>
+                <span>− {formatPrice(discount)}</span>
+              </div>
+            )}
             <div className="mt-1 flex justify-between text-sm text-ink/55">
               <span>Payment</span>
               <span>{payment}</span>
             </div>
             <div className="mt-3 flex justify-between border-t border-ink/10 pt-3 font-display text-lg font-semibold">
               <span>Total</span>
-              <span>{formatPrice(product.price)}</span>
+              <span>{formatPrice(total)}</span>
+            </div>
+            <div className="mt-1 flex justify-between text-sm text-ink/70">
+              <span>{isFullPayment ? "Pay now (bKash)" : `Advance now (${prepaidPercent}%, bKash)`}</span>
+              <span>{formatPrice(payNow)}</span>
             </div>
             <p className="mt-1 text-xs text-ink/50">+ delivery charge (confirmed on WhatsApp)</p>
           </div>
@@ -202,9 +250,9 @@ export function OrderForm() {
           <textarea className="input min-h-24" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="House, road, area…" />
         </Field>
 
-        <Field label="Payment method">
+        <Field label="Payment method (via bKash)">
           <div className="flex flex-wrap gap-3">
-            {["Cash on Delivery", "bKash (advance)"].map((m) => (
+            {[`bKash advance (${prepaidPercent}%)`, "bKash full payment"].map((m) => (
               <button
                 type="button"
                 key={m}
@@ -215,6 +263,34 @@ export function OrderForm() {
               </button>
             ))}
           </div>
+          <div className="mt-3 rounded-xl border border-ink/10 bg-sand p-3 text-sm">
+            <div className="flex justify-between font-semibold">
+              <span>Pay now via bKash</span>
+              <span className="text-coral">{formatPrice(payNow)}</span>
+            </div>
+            <p className="mt-1 text-ink/60">
+              {isFullPayment
+                ? "Full payment now — send it to our bKash and share the transaction ID."
+                : `${prepaidPercent}% advance to start your book. Send it to bKash ${brand.bkashNumber}; the rest is due before delivery.`}
+            </p>
+          </div>
+        </Field>
+
+        <Field label="Coupon code (optional)">
+          <div className="flex gap-2">
+            <input
+              className="input"
+              value={coupon}
+              onChange={(e) => setCoupon(e.target.value)}
+              placeholder="e.g. WELCOME10"
+            />
+            <button type="button" onClick={applyCoupon} className="btn-outline shrink-0">Apply</button>
+          </div>
+          {couponMsg && (
+            <p className={`mt-1 text-sm ${applied ? "text-ink/70" : "text-coral"}`}>
+              {applied ? "✓ " : ""}{couponMsg}
+            </p>
+          )}
         </Field>
 
         {supabaseConfigured && (
@@ -262,11 +338,15 @@ export function OrderForm() {
           <Row label="Size" value={product.size} />
           <Row label="Pages" value={String(product.pages)} />
           <Row label="Payment" value={payment} />
+          {discount > 0 && <Row label="Subtotal" value={formatPrice(product.price)} />}
+          {discount > 0 && <Row label={`Discount (${applied?.code})`} value={`− ${formatPrice(discount)}`} />}
           <div className="my-2 border-t border-ink/15" />
-          <Row label="Total" value={formatPrice(product.price)} bold />
+          <Row label="Total" value={formatPrice(total)} bold />
+          <Row label={isFullPayment ? "Pay now" : `Pay now (${prepaidPercent}%)`} value={formatPrice(payNow)} />
         </div>
         <p className="mt-4 text-sm text-ink/55">
-          Delivery charge is added based on your city and confirmed on WhatsApp.
+          Pay the advance via bKash to start. Delivery charge is added based on your city
+          and confirmed on WhatsApp.
         </p>
       </aside>
     </div>

@@ -10,12 +10,21 @@ export const brand = {
   emoji: "📸",
   // Contact / social — update with your real handles before launch
   whatsapp: "+8801XXXXXXXXX",
+  bkashNumber: "01XXXXXXXXX", // your bKash number for manual advance payments
   email: "hello@scrapjoy.com.bd",
   instagram: "https://instagram.com/scrapjoy",
   facebook: "https://facebook.com/scrapjoy",
   currency: "৳", // BDT
   country: "Bangladesh",
 };
+
+// Payment policy: books are made to order, so we require an advance to start.
+// No Cash on Delivery — customers pay a % up front (via bKash), rest before delivery.
+export const prepaidPercent = 75;
+
+export function advanceAmount(total: number) {
+  return Math.ceil((total * prepaidPercent) / 100 / 10) * 10; // round up to nearest ৳10
+}
 
 // Whether SSLCommerz online payment is live yet. Until you have a merchant
 // account, keep this false and orders run on COD + manual bKash.

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { brand, products, formatPrice } from "@/lib/brand";
 import { ProductCard } from "@/components/ProductCard";
 import { SmartImage } from "@/components/SmartImage";
+import { Reviews } from "@/components/Reviews";
 import { img } from "@/lib/images";
 
 const steps = [
@@ -25,7 +26,7 @@ const steps = [
 const advantages = [
   { icon: "🎨", title: "Designed by humans", body: "A real designer arranges every book — not an algorithm." },
   { icon: "📗", title: "Made to last", body: "Premium paper and sturdy, matte-finish hardcovers." },
-  { icon: "💵", title: "Pay on delivery", body: "Cash on Delivery anywhere in Bangladesh." },
+  { icon: "💳", title: "Easy bKash payment", body: "Start with a 75% advance via bKash — quick and secure." },
   { icon: "🔁", title: "Love-it guarantee", body: "Free reprint if your book ever arrives damaged." },
 ];
 
@@ -58,7 +59,7 @@ export default function HomePage() {
               <Link href="/how-it-works" className="btn-outline">See how it works</Link>
             </div>
             <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink/55">
-              <span>💵 Cash on Delivery</span>
+              <span>💳 Easy bKash payment</span>
               <span>📦 Nationwide shipping</span>
               <span>🔁 Free reprint if damaged</span>
             </div>
@@ -124,24 +125,7 @@ export default function HomePage() {
             People are <span className="wavy">obsessed</span>
           </h2>
         </div>
-        <div className="mt-14 grid gap-6 md:grid-cols-3">
-          {testimonials.map((t, i) => (
-            <figure key={i} className="card flex flex-col">
-              <span className="font-display text-5xl leading-none text-coral/30">“</span>
-              <blockquote className="-mt-3 flex-1 font-display text-lg italic leading-relaxed text-ink/80">
-                {t.quote}
-              </blockquote>
-              <figcaption className="mt-5 flex items-center gap-3">
-                <span className="grid h-9 w-9 place-items-center rounded-full bg-sand font-display text-sm font-semibold">
-                  {t.name[0]}
-                </span>
-                <span className="text-sm text-ink/60">
-                  <span className="font-semibold text-ink">{t.name}</span> · {t.city}
-                </span>
-              </figcaption>
-            </figure>
-          ))}
-        </div>
+        <Reviews fallback={testimonials} />
       </section>
 
       {/* CTA */}
@@ -153,8 +137,8 @@ export default function HomePage() {
               Make something you'll keep forever.
             </h2>
             <p className="mx-auto mt-4 max-w-lg leading-relaxed text-cream/70">
-              Books start at just {formatPrice(products[0].price)}. Cash on Delivery available
-              anywhere in {brand.country}.
+              Books start at just {formatPrice(products[0].price)}. Pay easily with bKash,
+              delivered anywhere in {brand.country}.
             </p>
             <Link href="/create" className="btn-primary mt-8">Start my photobook</Link>
           </div>

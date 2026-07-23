@@ -18,7 +18,7 @@ export function getBrowserSupabase(): SupabaseClient | null {
   if (!supabaseConfigured) return null;
   if (!browserClient) {
     browserClient = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!, {
-      auth: { persistSession: false },
+      auth: { persistSession: true, autoRefreshToken: true },
     });
   }
   return browserClient;

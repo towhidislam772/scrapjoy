@@ -38,8 +38,8 @@ export default function AboutPage() {
         </div>
         <div className="card bg-teal">
           <div className="text-4xl">💵</div>
-          <h3 className="mt-3 font-display text-xl font-bold">Pay on delivery</h3>
-          <p className="mt-1 text-ink/70">Cash on Delivery anywhere in {brand.country}.</p>
+          <h3 className="mt-3 font-display text-xl font-bold">Easy bKash payment</h3>
+          <p className="mt-1 text-ink/70">Secure bKash payment, delivered across {brand.country}.</p>
         </div>
         <div className="card bg-coral text-white">
           <div className="text-4xl">🔁</div>

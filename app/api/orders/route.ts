@@ -35,6 +35,10 @@ export async function POST(req: NextRequest) {
     occasion: str(body.occasion),
     payment: str(body.payment),
     photo_count: num(body.photo_count) ?? 0,
+    user_id: typeof body.user_id === "string" ? body.user_id : null,
+    email: str(body.email),
+    coupon_code: typeof body.coupon_code === "string" ? body.coupon_code : null,
+    discount: num(body.discount) ?? 0,
   };
 
   if (!row.customer_name || !row.phone || !row.address) {

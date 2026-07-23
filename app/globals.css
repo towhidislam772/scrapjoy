@@ -81,6 +81,23 @@
   background-size: 4px 4px;
 }
 
+/* Animated tutorial: cross-fade book covers */
+.tut-scene {
+  animation: tutShow 9s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes tutShow {
+  0% { opacity: 0; transform: translateY(10px) scale(0.97); }
+  4% { opacity: 1; transform: none; }
+  28% { opacity: 1; transform: none; }
+  33% { opacity: 0; transform: translateY(-10px) scale(0.97); }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tut-scene { animation: none; }
+  .tut-scene:first-child { opacity: 1; }
+}
+
 /* Print: show only the receipt, hide site chrome */
 @media print {
   header,

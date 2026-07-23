@@ -32,7 +32,10 @@ export function Nav() {
           ))}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <Link href="/account" className="hidden text-sm font-medium text-ink/70 transition-colors hover:text-ink sm:block">
+            Account
+          </Link>
           <Link href="/create" className="btn-primary text-sm">
             Make a book
           </Link>

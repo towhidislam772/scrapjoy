@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { brand } from "@/lib/brand";
+import { AnimatedTutorial } from "@/components/AnimatedTutorial";
 
 export const metadata: Metadata = {
   title: `How it works — ${brand.name}`,
@@ -11,7 +12,7 @@ const steps = [
   {
     n: "1",
     title: "Choose your book",
-    body: "Pick a size and page count. Order online with Cash on Delivery or bKash — no account needed.",
+    body: "Pick a size and page count, then pay a 75% advance via bKash to get started.",
     icon: "📚",
     color: "bg-sunny",
   },
@@ -32,7 +33,7 @@ const steps = [
   {
     n: "4",
     title: "Printed & delivered",
-    body: "Once you approve, we print your book and ship it anywhere in Bangladesh. Pay on delivery if you chose COD.",
+    body: "Once you approve and clear the balance, we print your book and ship it anywhere in Bangladesh.",
     icon: "🚚",
     color: "bg-grape",
   },
@@ -45,6 +46,19 @@ export default function HowItWorksPage() {
       <p className="mt-3 max-w-xl text-lg text-ink/70">
         No design skills needed. You send the memories, we do the rest.
       </p>
+
+      <div className="mt-10 grid items-center gap-8 rounded-blob border border-ink/10 bg-sand p-8 md:grid-cols-2">
+        <AnimatedTutorial />
+        <div>
+          <span className="eyebrow">Watch how easy it is</span>
+          <h2 className="mt-2 font-display text-3xl font-semibold">Design a cover in seconds</h2>
+          <p className="mt-2 leading-relaxed text-ink/70">
+            Pick a place or event, choose a colour and an icon, add your title — and your
+            cover comes to life. Then drop in your photos and we handle the rest.
+          </p>
+          <Link href="/create" className="btn-primary mt-5">Try the builder</Link>
+        </div>
+      </div>
 
       <div className="mt-12 space-y-6">
         {steps.map((s) => (

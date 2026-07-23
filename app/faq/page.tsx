@@ -18,7 +18,7 @@ const faqs = [
   },
   {
     q: "How do I pay?",
-    a: "You can pay Cash on Delivery (COD) anywhere in Bangladesh, or send an advance via bKash. Card and mobile-banking checkout is coming soon.",
+    a: "Because every book is custom-made, we ask for a 75% advance via bKash to begin. The remaining 25% is paid before delivery. You can also pay in full up front if you prefer.",
   },
   {
     q: "How long does it take?",
