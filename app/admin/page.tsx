@@ -39,7 +39,16 @@ export default function AdminPage() {
       });
       if (res.status === 401) throw new Error("Wrong password.");
       if (res.status === 501) throw new Error("Backend not configured yet. Add your Supabase keys and ADMIN_PASSWORD.");
-      if (!res.ok) throw new Error(`Failed (${res.status}).`);
+      if (!res.ok) {
+        let detail = "";
+        try {
+          const j = await res.json();
+          if (j?.error) detail = `: ${j.error}`;
+        } catch {
+          /* ignore */
+        }
+        throw new Error(`Failed (${res.status})${detail}`);
+      }
       const data = (await res.json()) as { orders: Order[] };
       setOrders(data.orders);
     } catch (err) {
