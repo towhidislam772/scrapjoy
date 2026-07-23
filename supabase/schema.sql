@@ -18,7 +18,7 @@ create table if not exists public.orders (
   city          text,
   address       text,
   occasion      text,
-  payment       text,                              -- 'Cash on Delivery' | 'bKash (advance)'
+  payment       text,                              -- 'bKash advance (75%)' | 'bKash full payment'
   photo_count   integer default 0,
   notes         text
 );

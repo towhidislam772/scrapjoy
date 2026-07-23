@@ -18,6 +18,11 @@ export const brand = {
   country: "Bangladesh",
 };
 
+// True once you've replaced the placeholder WhatsApp/bKash numbers with real ones.
+// While false, the order page shows a gentle "launching soon" notice so customers
+// never hit a broken contact link on the live site.
+export const brandReady = !/X{3,}/.test(brand.whatsapp) && !/X{3,}/.test(brand.bkashNumber);
+
 // Payment policy: books are made to order, so we require an advance to start.
 // No Cash on Delivery — customers pay a % up front (via bKash), rest before delivery.
 export const prepaidPercent = 75;
@@ -26,8 +31,8 @@ export function advanceAmount(total: number) {
   return Math.ceil((total * prepaidPercent) / 100 / 10) * 10; // round up to nearest ৳10
 }
 
-// Whether SSLCommerz online payment is live yet. Until you have a merchant
-// account, keep this false and orders run on COD + manual bKash.
+// Kept for reference. The store now uses a 75% bKash advance (see prepaidPercent);
+// automated bKash is scaffolded in lib/bkash.ts. Leave false until that's wired up.
 export const paymentsLive = false;
 
 export type Product = {

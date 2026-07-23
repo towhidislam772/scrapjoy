@@ -43,6 +43,8 @@ Open http://localhost:3000
 
 ## Payments
 
-Until you have a registered business + SSLCommerz merchant account, keep
-`paymentsLive = false` in `lib/brand.ts`. The store sells on **Cash on Delivery**
-and **manual bKash** through the WhatsApp order flow.
+The store requires a **75% advance via bKash** (no Cash on Delivery). Until you have
+a bKash **merchant** account (needs a registered business), this runs as a **manual
+bKash advance**: the customer sends the advance to your bKash number and shares the
+transaction ID through the order / WhatsApp flow. Set your bKash number in
+`lib/brand.ts`. Automated bKash checkout is scaffolded in `lib/bkash.ts`.
