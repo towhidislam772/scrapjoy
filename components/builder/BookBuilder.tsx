@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { products, formatPrice, Product } from "@/lib/brand";
+import { presetGroups } from "@/lib/presets";
 
 type Photo = { id: string; url: string; caption: string };
 
@@ -68,7 +69,17 @@ export function BookBuilder() {
   const [coverStyle, setCoverStyle] = useState<CoverStyle>("poster");
   const [coverColor, setCoverColor] = useState<string>("#F5E1A4");
   const [coverIcon, setCoverIcon] = useState<string>("🏖️");
+  const [presetTab, setPresetTab] = useState<string>(presetGroups[0].id);
+  const [suggestedIcons, setSuggestedIcons] = useState<string[]>([]);
   const [spread, setSpread] = useState(0);
+
+  const activeGroup = presetGroups.find((g) => g.id === presetTab) ?? presetGroups[0];
+
+  function applyPreset(name: string, emojis: string[]) {
+    setTitle(name);
+    setSuggestedIcons(emojis);
+    if (emojis[0]) setCoverIcon(emojis[0]);
+  }
   const fileInput = useRef<HTMLInputElement>(null);
 
   const product = products.find((p) => p.slug === productSlug) ?? products[1];
@@ -236,6 +247,36 @@ export function BookBuilder() {
         {coverStyle === "poster" && (
           <>
             <div>
+              <span className="mb-2 block font-display font-semibold">Quick start</span>
+              <div className="flex gap-1.5">
+                {presetGroups.map((g) => (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => setPresetTab(g.id)}
+                    className={`flex-1 rounded-lg border px-2 py-1.5 text-xs font-medium transition ${
+                      presetTab === g.id ? "border-coral bg-coral/10" : "border-ink/15 hover:border-ink/40"
+                    }`}
+                  >
+                    {g.label}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-2 flex max-h-32 flex-wrap gap-1.5 overflow-y-auto rounded-xl border border-ink/10 bg-cream p-2">
+                {activeGroup.items.map((it) => (
+                  <button
+                    key={it.name}
+                    type="button"
+                    onClick={() => applyPreset(it.name, it.emojis)}
+                    className="rounded-full border border-ink/15 bg-white px-2.5 py-1 text-xs font-medium transition hover:border-coral hover:bg-coral/5"
+                  >
+                    {it.emojis[0]} {it.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
               <span className="mb-2 block font-display font-semibold">Cover colour</span>
               <div className="grid grid-cols-7 gap-2">
                 {POSTER_COLORS.map((c) => (
@@ -255,6 +296,27 @@ export function BookBuilder() {
 
             <div>
               <span className="mb-2 block font-display font-semibold">Cover icon</span>
+              {suggestedIcons.length > 0 && (
+                <div className="mb-2 rounded-xl border border-coral/30 bg-coral/5 p-2">
+                  <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-coral">
+                    Suggested for {title || "this"}
+                  </span>
+                  <div className="flex flex-wrap gap-1">
+                    {suggestedIcons.map((e) => (
+                      <button
+                        key={e}
+                        type="button"
+                        onClick={() => setCoverIcon(e)}
+                        className={`grid h-8 w-8 place-items-center rounded-lg text-lg transition ${
+                          coverIcon === e ? "bg-coral/20 ring-1 ring-coral" : "bg-white hover:bg-sand"
+                        }`}
+                      >
+                        {e}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="grid max-h-36 grid-cols-7 gap-1 overflow-y-auto rounded-xl border border-ink/10 bg-cream p-2">
                 {COVER_ICONS.map((e) => (
                   <button
