@@ -11,6 +11,9 @@ type Photo = {
   caption: string;
   fit: "cover" | "contain";
   zoom: number;
+  w?: number;
+  h?: number;
+  lowRes?: boolean;
 };
 
 // Original cover layouts (our own designs, not copied from anyone).
@@ -28,27 +31,58 @@ const coverStyles: { id: CoverStyle; label: string }[] = [
 // Selectable background colours for the Travel-poster cover.
 // `dark: true` means the swatch is dark, so text/icon flips to light.
 const POSTER_COLORS: { bg: string; dark?: boolean }[] = [
+  // warm neutrals & golds
   { bg: "#F3ECD9" },
   { bg: "#F5E1A4" },
+  { bg: "#FDE2A7" },
   { bg: "#F4C542" },
   { bg: "#F6C9A8" },
+  { bg: "#FFCCBC" },
+  // pinks & reds
+  { bg: "#FADCD9" },
   { bg: "#F6C6D0" },
+  { bg: "#F8BBD0" },
   { bg: "#EC6A9C", dark: true },
   { bg: "#E4572E", dark: true },
+  { bg: "#AD1457", dark: true },
+  // greens
+  { bg: "#DCEDC8" },
+  { bg: "#C8E6C9" },
   { bg: "#BFD1B0" },
-  { bg: "#B7E0D0" },
+  { bg: "#B2DFDB" },
+  { bg: "#8FA088" },
+  { bg: "#2E7D32", dark: true },
+  // blues & purples
+  { bg: "#B3E5FC" },
   { bg: "#A9D5E8" },
+  { bg: "#B7E0D0" },
   { bg: "#3C7DA6", dark: true },
+  { bg: "#1565C0", dark: true },
   { bg: "#CDBCE8" },
+  { bg: "#D1C4E9" },
+  { bg: "#6A1B9A", dark: true },
+  // earthy & dark
   { bg: "#C0663F", dark: true },
+  { bg: "#6D4C41", dark: true },
   { bg: "#25262B", dark: true },
 ];
 
 // Selectable icons (standard emoji — free to use, not copied artwork).
 const COVER_ICONS = [
-  "🏖️", "🌴", "🌊", "🗼", "🗽", "⛩️", "🕌", "🏔️", "🏛️", "🌉",
-  "🌸", "🌺", "🌻", "🍋", "🍹", "🦩", "🐚", "⭐", "☀️", "🌙",
-  "✈️", "🚗", "💍", "🎓", "👶", "🎂", "❤️", "🎄",
+  // travel & places
+  "🏖️", "🏝️", "🏕️", "🌴", "🌊", "🗼", "🗽", "⛩️", "🕌", "🛕",
+  "🏔️", "🗻", "🌋", "🏛️", "🌉", "🏙️", "🎡", "🚢", "⛵", "🚂",
+  "🚗", "✈️", "🎈", "🧳", "🗺️",
+  // nature & sky
+  "🌸", "🌺", "🌻", "🌷", "🌵", "🍄", "🍁", "🌈", "🌅", "🌄",
+  "☀️", "🌙", "⭐", "❄️", "🌿",
+  // animals
+  "🦩", "🐚", "🐬", "🐢", "🐘", "🦒", "🐪", "🦜",
+  // food & drink
+  "🍋", "🍹", "🍕", "🍜", "🍰", "🥂", "☕",
+  // events & love
+  "💍", "💐", "🎓", "👶", "🎂", "🎉", "🎁", "❤️", "🌙", "🕋",
+  "🎄", "🥳", "👑", "💎", "📸",
 ];
 
 const accentBg: Record<Product["accent"], string> = {
@@ -103,6 +137,20 @@ export function BookBuilder() {
         zoom: 1,
       }));
     setPhotos((prev) => [...prev, ...next]);
+
+    // Measure each photo's resolution and flag low-res ones (won't print sharp).
+    next.forEach((p) => {
+      const im = new window.Image();
+      im.onload = () => {
+        const lowRes = Math.min(im.naturalWidth, im.naturalHeight) < 1000;
+        setPhotos((prev) =>
+          prev.map((x) =>
+            x.id === p.id ? { ...x, w: im.naturalWidth, h: im.naturalHeight, lowRes } : x,
+          ),
+        );
+      };
+      im.src = p.url;
+    });
   }
 
   function removePhoto(id: string) {
@@ -253,6 +301,11 @@ export function BookBuilder() {
                       <span className="w-8 text-center tabular-nums text-ink/60">{Math.round(p.zoom * 100)}%</span>
                       <button className="tag px-2 py-0.5" onClick={() => adjustZoom(p.id, 0.1)} disabled={p.zoom >= 2.5}>+</button>
                     </div>
+                    {p.lowRes && (
+                      <p className="mt-1 text-xs text-coral">
+                        ⚠ Low resolution{p.w ? ` (${p.w}×${p.h})` : ""} — may look blurry when printed. Try a higher-quality original.
+                      </p>
+                    )}
                   </div>
                 </div>
               ))}
@@ -440,6 +493,10 @@ function EmptyState({ onPick }: { onPick: () => void }) {
       <span className="text-6xl">📸</span>
       <span className="mt-4 font-display text-xl font-semibold">Add your photos to start</span>
       <span className="mt-1 text-ink/55">Click to choose photos from your device</span>
+      <span className="mt-3 max-w-xs text-xs text-ink/45">
+        📸 For the sharpest prints, upload the <strong>original</strong> photos (not
+        screenshots or downloads) — ideally 1500px or larger on the long side.
+      </span>
     </button>
   );
 }

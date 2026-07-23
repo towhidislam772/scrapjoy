@@ -44,14 +44,19 @@ export async function POST(req: NextRequest) {
       const { data: files } = await supabase.storage.from(PHOTO_BUCKET).list(o.id, {
         limit: 100,
       });
-      const photos = (files ?? [])
-        .filter((f) => f.name)
-        .map(
-          (f) =>
-            supabase.storage
-              .from(PHOTO_BUCKET)
-              .getPublicUrl(`${o.id}/${f.name}`).data.publicUrl,
-        );
+      // Private bucket: generate short-lived signed URLs (admin-only access).
+      const photos = (
+        await Promise.all(
+          (files ?? [])
+            .filter((f) => f.name)
+            .map(async (f) => {
+              const { data } = await supabase.storage
+                .from(PHOTO_BUCKET)
+                .createSignedUrl(`${o.id}/${f.name}`, 3600);
+              return data?.signedUrl ?? "";
+            }),
+        )
+      ).filter(Boolean);
       return { ...o, photos };
     }),
   );
