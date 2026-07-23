@@ -5,7 +5,13 @@ import Link from "next/link";
 import { products, formatPrice, Product } from "@/lib/brand";
 import { presetGroups } from "@/lib/presets";
 
-type Photo = { id: string; url: string; caption: string };
+type Photo = {
+  id: string;
+  url: string;
+  caption: string;
+  fit: "cover" | "contain";
+  zoom: number;
+};
 
 // Original cover layouts (our own designs, not copied from anyone).
 type CoverStyle = "poster" | "centered" | "fullbleed" | "band" | "minimal" | "framed";
@@ -93,6 +99,8 @@ export function BookBuilder() {
         id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
         url: URL.createObjectURL(f),
         caption: "",
+        fit: "cover" as const,
+        zoom: 1,
       }));
     setPhotos((prev) => [...prev, ...next]);
   }
@@ -118,6 +126,22 @@ export function BookBuilder() {
 
   function setCaption(id: string, caption: string) {
     setPhotos((prev) => prev.map((p) => (p.id === id ? { ...p, caption } : p)));
+  }
+
+  function toggleFit(id: string) {
+    setPhotos((prev) =>
+      prev.map((p) =>
+        p.id === id ? { ...p, fit: p.fit === "cover" ? "contain" : "cover" } : p,
+      ),
+    );
+  }
+
+  function adjustZoom(id: string, delta: number) {
+    setPhotos((prev) =>
+      prev.map((p) =>
+        p.id === id ? { ...p, zoom: Math.min(2.5, Math.max(1, +(p.zoom + delta).toFixed(2))) } : p,
+      ),
+    );
   }
 
   const coverProps: CoverProps = { title, subtitle, product, coverStyle, coverPhoto, coverColor, coverIcon };
@@ -215,6 +239,19 @@ export function BookBuilder() {
                       <button className="tag px-2 py-0.5" onClick={() => move(p.id, -1)} disabled={i === 0}>←</button>
                       <button className="tag px-2 py-0.5" onClick={() => move(p.id, 1)} disabled={i === photos.length - 1}>→</button>
                       <button className="tag px-2 py-0.5 text-coral" onClick={() => removePhoto(p.id)}>Remove</button>
+                    </div>
+                    <div className="mt-1.5 flex items-center gap-1.5 text-xs">
+                      <button
+                        className="tag px-2 py-0.5"
+                        onClick={() => toggleFit(p.id)}
+                        title="Toggle how the photo fills the page"
+                      >
+                        {p.fit === "cover" ? "Fill" : "Fit"}
+                      </button>
+                      <span className="text-ink/45">Zoom</span>
+                      <button className="tag px-2 py-0.5" onClick={() => adjustZoom(p.id, -0.1)} disabled={p.zoom <= 1}>−</button>
+                      <span className="w-8 text-center tabular-nums text-ink/60">{Math.round(p.zoom * 100)}%</span>
+                      <button className="tag px-2 py-0.5" onClick={() => adjustZoom(p.id, 0.1)} disabled={p.zoom >= 2.5}>+</button>
                     </div>
                   </div>
                 </div>
@@ -456,9 +493,14 @@ function InteriorPage({ photo, side, pageNo }: { photo?: Photo; side: "left" | "
     <div className={`paper relative ${BOOK_W} aspect-[3/4] overflow-hidden ${rounded}`}>
       {photo ? (
         <div className="h-full w-full p-3">
-          <div className="h-full w-full overflow-hidden rounded-sm ring-1 ring-ink/10">
+          <div className="h-full w-full overflow-hidden rounded-sm bg-cream ring-1 ring-ink/10">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={photo.url} alt="" className="h-full w-full object-cover" />
+            <img
+              src={photo.url}
+              alt=""
+              className={`h-full w-full ${photo.fit === "contain" ? "object-contain" : "object-cover"}`}
+              style={{ transform: `scale(${photo.zoom})` }}
+            />
           </div>
           {photo.caption && (
             <span className="absolute inset-x-3 bottom-6 rounded bg-cream/85 px-2 py-1 text-center text-[11px] text-ink">

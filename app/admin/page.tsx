@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { brand, formatPrice } from "@/lib/brand";
 
+const STATUSES = ["new", "designing", "approved", "printing", "shipped", "done", "cancelled"];
+
 type Order = {
   id: string;
   created_at: string;
@@ -47,6 +49,19 @@ export default function AdminPage() {
     }
   }
 
+  async function updateStatus(id: string, status: string) {
+    setOrders((prev) => prev?.map((o) => (o.id === id ? { ...o, status } : o)) ?? prev);
+    try {
+      await fetch("/api/admin/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password, id, status }),
+      });
+    } catch {
+      /* optimistic update; a failed sync will correct on next reload */
+    }
+  }
+
   if (!orders) {
     return (
       <div className="container-x flex min-h-[60vh] items-center justify-center py-16">
@@ -79,6 +94,16 @@ export default function AdminPage() {
         <button className="btn-outline text-sm" onClick={() => setOrders(null)}>Lock</button>
       </div>
 
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Stat label="Total orders" value={String(orders.length)} />
+        <Stat label="Customers" value={String(new Set(orders.map((o) => o.phone)).size)} />
+        <Stat
+          label="In progress"
+          value={String(orders.filter((o) => ["designing", "approved", "printing", "shipped"].includes(o.status)).length)}
+        />
+        <Stat label="Revenue" value={formatPrice(orders.reduce((s, o) => s + (o.price || 0), 0))} />
+      </div>
+
       {orders.length === 0 ? (
         <p className="mt-10 text-ink/60">No orders yet.</p>
       ) : (
@@ -89,7 +114,15 @@ export default function AdminPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-display text-lg font-semibold">{o.customer_name}</span>
-                    <span className="tag bg-sunny px-2 py-0.5 text-xs">{o.status}</span>
+                    <select
+                      value={o.status}
+                      onChange={(e) => updateStatus(o.id, e.target.value)}
+                      className="rounded-full border border-ink/20 bg-white px-2 py-0.5 text-xs font-medium"
+                    >
+                      {STATUSES.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
                   </div>
                   <p className="mt-0.5 text-sm text-ink/60">
                     {new Date(o.created_at).toLocaleString()} · #{o.id.slice(0, 8)}
@@ -147,6 +180,15 @@ function Line({ label, value }: { label: string; value: string }) {
     <div className="flex gap-2">
       <span className="shrink-0 text-ink/45">{label}:</span>
       <span className="font-medium">{value}</span>
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="card p-4">
+      <div className="text-xs uppercase tracking-wide text-ink/50">{label}</div>
+      <div className="mt-1 font-display text-2xl font-semibold">{value}</div>
     </div>
   );
 }

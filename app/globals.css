@@ -80,3 +80,16 @@
   background-image: radial-gradient(rgba(34, 30, 27, 0.02) 1px, transparent 1px);
   background-size: 4px 4px;
 }
+
+/* Print: show only the receipt, hide site chrome */
+@media print {
+  header,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+  .receipt {
+    box-shadow: none !important;
+    border: none !important;
+  }
+}

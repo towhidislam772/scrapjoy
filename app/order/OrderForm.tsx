@@ -27,6 +27,7 @@ export function OrderForm() {
   const [photos, setPhotos] = useState<File[]>([]);
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
+  const [orderId, setOrderId] = useState("");
   const fileInput = useRef<HTMLInputElement>(null);
 
   const product = products.find((p) => p.slug === productSlug) ?? products[1];
@@ -82,6 +83,7 @@ export function OrderForm() {
       });
       if (!res.ok) throw new Error(`Order failed (${res.status})`);
       const { id } = (await res.json()) as { id: string };
+      setOrderId(id);
 
       // 2) Upload photos to Storage under this order's folder.
       const supabase = getBrowserSupabase();
@@ -109,13 +111,58 @@ export function OrderForm() {
 
   if (status === "done") {
     return (
-      <div className="mt-10 card bg-teal text-center">
-        <div className="text-5xl">🎉</div>
-        <h2 className="mt-3 font-display text-2xl font-semibold">Thank you!</h2>
-        <p className="mt-2 text-ink/75">{message}</p>
-        <a href={waLink} target="_blank" rel="noreferrer" className="btn-primary mt-6">
-          Message us on WhatsApp
-        </a>
+      <div className="mt-10">
+        <div className="mb-4 text-center no-print">
+          <div className="text-5xl">🎉</div>
+          <h2 className="mt-2 font-display text-2xl font-semibold">Thank you, {name.split(" ")[0]}!</h2>
+          <p className="mt-1 text-ink/70">{message}</p>
+        </div>
+
+        <div className="receipt card mx-auto max-w-lg">
+          <div className="flex items-center justify-between border-b border-ink/10 pb-4">
+            <div className="flex items-center gap-2 font-display text-xl font-semibold">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-coral text-sm text-cream">{brand.emoji}</span>
+              {brand.name}
+            </div>
+            <div className="text-right text-sm text-ink/55">
+              <div className="font-semibold text-ink">Order receipt</div>
+              <div>#{orderId ? orderId.slice(0, 8) : "—"}</div>
+            </div>
+          </div>
+
+          <div className="mt-4 space-y-1.5 text-sm text-ink/75">
+            <Row label="Date" value={new Date().toLocaleString()} />
+            <Row label="Customer" value={name} />
+            <Row label="Phone" value={phone} />
+            <Row label="Deliver to" value={`${address}, ${city}`} />
+            {occasion && <Row label="Occasion" value={occasion} />}
+          </div>
+
+          <div className="mt-4 border-t border-ink/10 pt-4">
+            <div className="flex justify-between">
+              <span>{product.name} · {product.size}</span>
+              <span>{formatPrice(product.price)}</span>
+            </div>
+            <div className="mt-1 flex justify-between text-sm text-ink/55">
+              <span>Payment</span>
+              <span>{payment}</span>
+            </div>
+            <div className="mt-3 flex justify-between border-t border-ink/10 pt-3 font-display text-lg font-semibold">
+              <span>Total</span>
+              <span>{formatPrice(product.price)}</span>
+            </div>
+            <p className="mt-1 text-xs text-ink/50">+ delivery charge (confirmed on WhatsApp)</p>
+          </div>
+
+          <p className="mt-5 border-t border-ink/10 pt-4 text-center text-xs text-ink/50">
+            {brand.name} · {brand.email} · {brand.whatsapp}
+          </p>
+        </div>
+
+        <div className="mt-6 flex flex-wrap justify-center gap-3 no-print">
+          <button onClick={() => window.print()} className="btn-secondary">🖨️ Print / Save receipt</button>
+          <a href={waLink} target="_blank" rel="noreferrer" className="btn-primary">Message us on WhatsApp</a>
+        </div>
       </div>
     );
   }
